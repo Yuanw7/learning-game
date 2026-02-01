@@ -1,33 +1,48 @@
 using UnityEngine;
 
-public class CameraFollow : MonoBehaviour
+public class CameraController : MonoBehaviour
 {
-    [Header("Target Settings")]
-    public Transform target;        // Drag your Ball here
-    public Vector3 offset = new Vector3(0, 5, -10); // Distance from the ball
+    [Header("Target")]
+    public GameObject player; // Drag your Ball here
 
-    [Header("Smooth Settings")]
-    public float smoothSpeed = 0.125f; // Adjust for "weight" (0.01 to 1.0)
-    public bool lookAtTarget = true;
+    [Header("Settings")]
+    public bool useSmoothing = false; // Set to TRUE if you want a "Cinematic" feel
+    public float smoothSpeed = 0.125f;
+    
+    // The distance between the camera and the player
+    private Vector3 offset;
 
+    void Start()
+    {
+        // 1. Calculate the initial offset based on where you placed the Camera in the Scene view
+        // This means you don't have to type numbers manually!
+        if (player != null)
+        {
+            offset = transform.position - player.transform.position;
+        }
+        else
+        {
+            Debug.LogError("Camera needs a Player target! Drag the Ball into the inspector.");
+        }
+    }
+
+    // LateUpdate runs AFTER all physics calculations are done
     void LateUpdate()
     {
-        if (target == null) return;
+        if (player == null) return;
 
-        // 1. Calculate where the camera wants to be
-        Vector3 desiredPosition = target.position + offset;
+        // 2. Calculate where the camera should be
+        Vector3 targetPosition = player.transform.position + offset;
 
-        // 2. Smoothly interpolate between current position and desired position
-        // Vector3.Lerp is standard, but SmoothDamp is also great for physics games
-        Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
-        
-        // 3. Apply the position
-        transform.position = smoothedPosition;
-
-        // 4. Always keep the ball in the center of the frame
-        if (lookAtTarget)
+        if (useSmoothing)
         {
-            transform.LookAt(target);
+            // Option A: Smooth Follow (Cinematic but can feel 'heavy')
+            transform.position = Vector3.Lerp(transform.position, targetPosition, smoothSpeed);
+        }
+        else
+        {
+            // Option B: Hard Lock (Crisp, instant response - Best for "Roll-a-Ball")
+            transform.position = targetPosition;
         }
     }
 }
